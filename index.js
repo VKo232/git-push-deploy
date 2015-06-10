@@ -19,14 +19,25 @@ http.createServer(function(req, res){
       console.log("New Push", repoName, repoUrl, reqQuery);
       res.write("ok");
       res.end();
-      var script = reqQuery.SCRIPT.replace(/\./g, "");
-      if (script) {
-        delete reqQuery.SCRIPT;
-        var envMap = {};
-        for (var name in reqQuery) envMap["QUERY_" + name] = reqQuery[name];
+
+      if (reqQuery.script) {
+        var script = reqQuery.script.replace(/\.\./g, "dotdot");
         var fullPath = path.join("/usr/src/scripts", script + ".sh");
         console.log("script path", fullPath);
-        var buildProcess = spawn(fullPath, [repoName, repoUrl], {env: reqQuery});
+        var shargs = [repoName, repoUrl];
+        var index = 3;
+        while(true){
+          var key = "arg" + index;
+          var val = reqQuery[key];
+          if(typeof(val) == "string"){
+            shargs.push(val);
+            index += 1; 
+          }else{
+            break;
+          };  
+        }
+        console.log("script args", JSON.stringify(shargs));
+        var buildProcess = spawn(fullPath, shargs);
         buildProcess.stdout.pipe(process.stdout);
         buildProcess.stderr.pipe(process.stderr);
         buildProcess.on("error", console.error.bind(console));
