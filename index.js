@@ -24,18 +24,11 @@ http.createServer(function(req, res){
         var script = reqQuery.script.replace(/\.\./g, "dotdot");
         var fullPath = path.join("/usr/src/scripts", script + ".sh");
         console.log("script path", fullPath);
-        var shargs = [repoName, repoUrl];
-        var index = 3;
-        while(true){
-          var key = "arg" + index;
-          var val = reqQuery[key];
-          if(typeof(val) == "string"){
-            shargs.push(val);
-            index += 1; 
-          }else{
-            break;
-          };  
+        var shargs = [];
+        for(var index = 1; typeof(reqQuery["arg" + index]) == "string"; index++){
+          shargs.push(reqQuery["arg" + index]);
         }
+        shargs.push(repoName, repoUrl);
         console.log("script args", JSON.stringify(shargs));
         var buildProcess = spawn(fullPath, shargs);
         buildProcess.stdout.pipe(process.stdout);
@@ -54,4 +47,4 @@ http.createServer(function(req, res){
   }
 }).listen(process.env.PORT || 3000);
 
-//curl -X POST -H "Content-Type: application/json" --data @bitbucket-payload.json "http://localhost:3000?A=1&B=2&SCRIPT=deploy"
+//curl -X POST -H "Content-Type: application/json" --data @bitbucket-payload.json "http://localhost:3000?script=deploy&arg1=one&arg2=two"
